@@ -363,22 +363,24 @@ H5ADToH5Seurat <- function(
     return(invisible(x = NULL))
   }
   ds.map <- c(
-    scale.data = if (inherits(x = source[['X']], what = 'H5D')) {
+    counts = if (source$exists(name = 'layers') && source$exists(name = 'layers/counts')) {
+      'layers/counts'
+    } else if (source$exists(name = 'raw') && source$exists(name = 'raw/X')) {
+      'raw/X'
+    } else {
+      NULL
+    },
+    data = if (source$exists(name = 'layers') && source$exists(name = 'layers/data')) {
+      'layers/data'
+    } else if (source$exists(name = 'X')) {
       'X'
     } else {
       NULL
     },
-    data = if (inherits(x = source[['X']], what = 'H5D') && source$exists(name = 'raw')) {
-      'raw/X'
+    scale.data = if (source$exists(name = 'layers')) {
+      'layers/scale.data'
     } else {
-      'X'
-    },
-    counts = if (source$exists(name = 'layers')) {
-      'layers/counts'
-    } else if (source$exists(name = 'raw')) {
-      'raw/X'
-    } else {
-      'X'
+      NULL
     }
   )
   # Add assay data
@@ -797,46 +799,46 @@ H5ADToH5Seurat <- function(
       )
     }
   }
-  # Add layers
-  if (Exists(x = source, name = 'layers')) {
-    slots <- c('data')
-    if (!isTRUE(x = scaled)) {
-      slots <- c(slots, 'counts')
-    }
-    for (layer in names(x = source[['layers']])) {
-      layer.assay <- dfile[['assays']]$create_group(name = layer)
-      layer.assay$obj_copy_from(
-        src_loc = dfile[['assays']][[assay]],
-        src_name = 'features',
-        dst_name = 'features'
-      )
-      layer.assay$create_attr(
-        attr_name = 'key',
-        robj = UpdateKey(key = layer),
-        dtype = GuessDType(x = layer)
-      )
-      for (slot in slots) {
-        if (verbose) {
-          message("Adding layer ", layer, " as ", slot, " in assay ", layer)
-        }
-        layer.assay$obj_copy_from(
-          src_loc = source[['layers']],
-          src_name = layer,
-          dst_name = slot
-        )
-        # if (layer.assay[[slot]]$attr_exists(attr_name = 'shape')) {
-        if (isTRUE(x = AttrExists(x = layer.assay[[slot]], name = 'shape'))) {
-          dims <- rev(x = h5attr(x = layer.assay[[slot]], which = 'shape'))
-          layer.assay[[slot]]$create_attr(
-            attr_name = 'dims',
-            robj = dims,
-            dtype = GuessDType(x = dims)
-          )
-          layer.assay[[slot]]$attr_delete(attr_name = 'shape')
-        }
-      }
-    }
-  }
+  # # Add layers
+  # if (Exists(x = source, name = 'layers')) {
+  #   slots <- c('data')
+  #   if (!isTRUE(x = scaled)) {
+  #     slots <- c(slots, 'counts')
+  #   }
+  #   for (layer in names(x = source[['layers']])) {
+  #     layer.assay <- dfile[['assays']]$create_group(name = layer)
+  #     layer.assay$obj_copy_from(
+  #       src_loc = dfile[['assays']][[assay]],
+  #       src_name = 'features',
+  #       dst_name = 'features'
+  #     )
+  #     layer.assay$create_attr(
+  #       attr_name = 'key',
+  #       robj = UpdateKey(key = layer),
+  #       dtype = GuessDType(x = layer)
+  #     )
+  #     for (slot in slots) {
+  #       if (verbose) {
+  #         message("Adding layer ", layer, " as ", slot, " in assay ", layer)
+  #       }
+  #       layer.assay$obj_copy_from(
+  #         src_loc = source[['layers']],
+  #         src_name = layer,
+  #         dst_name = slot
+  #       )
+  #       # if (layer.assay[[slot]]$attr_exists(attr_name = 'shape')) {
+  #       if (isTRUE(x = AttrExists(x = layer.assay[[slot]], name = 'shape'))) {
+  #         dims <- rev(x = h5attr(x = layer.assay[[slot]], which = 'shape'))
+  #         layer.assay[[slot]]$create_attr(
+  #           attr_name = 'dims',
+  #           robj = dims,
+  #           dtype = GuessDType(x = dims)
+  #         )
+  #         layer.assay[[slot]]$attr_delete(attr_name = 'shape')
+  #       }
+  #     }
+  #   }
+  # }
   return(dfile)
 }
 
