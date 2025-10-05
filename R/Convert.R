@@ -377,7 +377,7 @@ H5ADToH5Seurat <- function(
     } else {
       NULL
     },
-    scale.data = if (source$exists(name = 'layers')) {
+    scale.data = if (source$exists(name = 'layers') && source$exists(name = 'layers/scale.data')) {
       'layers/scale.data'
     } else {
       NULL
