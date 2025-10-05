@@ -373,7 +373,9 @@ H5ADToH5Seurat <- function(
     } else {
       'X'
     },
-    counts = if (source$exists(name = 'raw')) {
+    counts = if (source$exists(name = 'layers')) {
+      'layers/counts'
+    } else if (source$exists(name = 'raw')) {
       'raw/X'
     } else {
       'X'
